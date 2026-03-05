@@ -15,18 +15,43 @@ export const GET = withAuth(async (req: NextRequest) => {
         const endDate = searchParams.get("endDate")
             ? new Date(searchParams.get("endDate")!)
             : undefined;
+        const cashierId = searchParams.get("cashierId");
+        const paymentMethod = searchParams.get("paymentMethod");
+        const status = searchParams.get("status");
 
         const workbook = new ExcelJS.Workbook();
 
         if (type === "transactions") {
             const sheet = workbook.addWorksheet("Transaksi");
 
-            const where: Record<string, unknown> = { paymentStatus: "PAID" };
+            const where: Record<string, unknown> = {};
+
+            if (status && status !== "ALL") {
+                where.paymentStatus = status;
+            } else if (!status) {
+                where.paymentStatus = "PAID"; // Default legacy behavior
+            }
+
+            if (cashierId && cashierId !== "ALL") {
+                where.cashierId = cashierId;
+            }
+
             if (startDate || endDate) {
                 const createdAt: Record<string, Date> = {};
                 if (startDate) createdAt.gte = startDate;
-                if (endDate) createdAt.lte = endDate;
+                // Add 1 day to end date to include the whole day
+                if (endDate) {
+                    const end = new Date(endDate);
+                    end.setHours(23, 59, 59, 999);
+                    createdAt.lte = end;
+                }
                 where.createdAt = createdAt;
+            }
+
+            if (paymentMethod && paymentMethod !== "ALL") {
+                where.payments = {
+                    some: { method: paymentMethod }
+                };
             }
 
             const transactions = await prisma.transaction.findMany({

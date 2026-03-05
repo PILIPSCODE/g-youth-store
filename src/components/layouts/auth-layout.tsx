@@ -9,10 +9,28 @@ import { cn } from "@/lib/utils";
 import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-export function AuthLayout({ children }: { children: React.ReactNode }) {
+interface AuthLayoutProps {
+    children: React.ReactNode;
+    allowedRoles?: string[];
+}
+
+export function AuthLayout({ children, allowedRoles }: AuthLayoutProps) {
     const { data: session, status } = useSession();
+    const router = useRouter();
     const isSidebarOpen = useAppStore((state) => state.isSidebarOpen);
     const toggleSidebar = useAppStore((state) => state.toggleSidebar);
+
+    const userRole = (session?.user as { role?: string })?.role;
+
+    useEffect(() => {
+        if (status === "authenticated" && allowedRoles && userRole && !allowedRoles.includes(userRole)) {
+            if (userRole === "CASHIER") {
+                router.replace("/pos");
+            } else {
+                router.replace("/admin/dashboard");
+            }
+        }
+    }, [status, userRole, allowedRoles, router]);
 
     if (status === "loading") {
         return (
@@ -33,13 +51,21 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
         );
     }
 
+    // If role is not allowed, show loading while redirecting
+    if (allowedRoles && userRole && !allowedRoles.includes(userRole)) {
+        return (
+            <div className="flex items-center justify-center min-h-screen">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            </div>
+        );
+    }
+
     return (
         <div className="min-h-screen bg-gray-50/50 flex">
             <Sidebar />
             <div
                 className={cn(
-                    "flex-1 flex flex-col min-h-screen transition-all duration-200",
-                    isSidebarOpen ? "md:ml-64" : ""
+                    "flex-1 flex flex-col min-h-screen transition-all duration-200 md:ml-64"
                 )}
             >
                 <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-white px-4 md:px-6 shadow-sm md:hidden">

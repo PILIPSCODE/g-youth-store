@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { formatRupiah } from "@/lib/currency";
 import { toast } from "sonner";
-import { Store, Truck, ArrowLeft, Trash2 } from "lucide-react";
+import { Store, Truck, ArrowLeft, Trash2, Plus, Minus } from "lucide-react";
 import Link from "next/link";
 
 export default function CheckoutPage() {
@@ -31,7 +31,7 @@ export default function CheckoutPage() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (cart.length === 0) {
-            toast.error("Your cart is empty");
+            toast.error("Keranjang Anda kosong");
             return;
         }
 
@@ -67,14 +67,14 @@ export default function CheckoutPage() {
         };
 
         toast.promise(promise(), {
-            loading: 'Placing your order...',
+            loading: 'Memproses pesanan Anda...',
             success: (data) => {
                 if (data.data?.id) {
                     addOrderToHistory(data.data.id);
                 }
                 clearCart();
                 router.push("/order");
-                return "Order placed successfully! Redirecting...";
+                return "Pesanan berhasil dibuat! Mengalihkan...";
             },
             error: (err) => {
                 setIsSubmitting(false);
@@ -86,9 +86,9 @@ export default function CheckoutPage() {
     if (cart.length === 0 && !isSubmitting) {
         return (
             <div className="mx-auto max-w-7xl px-4 py-16 text-center">
-                <h2 className="text-2xl font-bold mb-4">Your Cart is Empty</h2>
-                <p className="text-muted-foreground mb-8">Looks like you haven't added anything to your cart yet.</p>
-                <Button onClick={() => router.push("/order")}>Browse Products</Button>
+                <h2 className="text-2xl font-bold mb-4">Keranjang Anda Kosong</h2>
+                <p className="text-muted-foreground mb-8">Sepertinya Anda belum menambahkan produk ke keranjang.</p>
+                <Button onClick={() => router.push("/order")}>Belanja Sekarang</Button>
             </div>
         );
     }
@@ -98,17 +98,17 @@ export default function CheckoutPage() {
             <div className="mb-6">
                 <Link href="/order" className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
                     <ArrowLeft className="mr-2 h-4 w-4" />
-                    Back to Store
+                    Kembali ke Toko
                 </Link>
-                <h1 className="text-3xl font-bold tracking-tight mt-4">Checkout</h1>
+                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mt-4">Keranjang</h1>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                 <div className="lg:col-span-7 space-y-6">
                     <Card className="shadow-sm border-slate-200">
                         <CardHeader className="bg-slate-50 border-b border-slate-100 pb-4">
-                            <CardTitle className="text-xl">Delivery Method</CardTitle>
-                            <CardDescription>How would you like to receive your order?</CardDescription>
+                            <CardTitle className="text-xl">Metode Pengambilan</CardTitle>
+                            <CardDescription>Bagaimana Anda ingin menerima pesanan?</CardDescription>
                         </CardHeader>
                         <CardContent className="pt-6">
                             <div className="grid grid-cols-2 gap-4">
@@ -118,8 +118,8 @@ export default function CheckoutPage() {
                                 >
                                     <Store className="h-8 w-8" />
                                     <div className="text-center">
-                                        <div className="font-bold text-slate-900">In-Store Pickup</div>
-                                        <div className="text-xs font-medium text-emerald-600 mt-1">Free</div>
+                                        <div className="font-bold text-slate-900">Ambil di Toko</div>
+                                        <div className="text-xs font-medium text-emerald-600 mt-1">Gratis</div>
                                     </div>
                                 </div>
                                 <div
@@ -128,8 +128,8 @@ export default function CheckoutPage() {
                                 >
                                     <Truck className="h-8 w-8" />
                                     <div className="text-center">
-                                        <div className="font-bold text-slate-900">Delivery</div>
-                                        <div className="text-xs font-medium text-amber-600 mt-1">Fees may apply</div>
+                                        <div className="font-bold text-slate-900">Diantar</div>
+                                        <div className="text-xs font-medium text-amber-600 mt-1">Biaya menyesuaikan</div>
                                     </div>
                                 </div>
                             </div>
@@ -138,29 +138,29 @@ export default function CheckoutPage() {
 
                     <Card className="shadow-sm border-slate-200 overflow-hidden">
                         <CardHeader className="bg-slate-50 border-b border-slate-100 pb-4">
-                            <CardTitle className="text-xl">Customer Information</CardTitle>
-                            <CardDescription>Please enter your details to complete the order.</CardDescription>
+                            <CardTitle className="text-xl">Informasi Pemesan</CardTitle>
+                            <CardDescription>Masukkan data Anda untuk menyelesaikan pesanan.</CardDescription>
                         </CardHeader>
                         <CardContent className="pt-6">
                             <form id="checkout-form" onSubmit={handleSubmit} className="space-y-5">
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                                     <div className="space-y-2">
-                                        <label className="text-sm font-semibold text-slate-700">Full Name</label>
+                                        <label className="text-sm font-semibold text-slate-700">Nama Lengkap</label>
                                         <Input
                                             required
                                             className="h-11 bg-slate-50 focus:bg-white"
-                                            placeholder="e.g. John Doe"
+                                            placeholder="contoh: Budi Santoso"
                                             value={formData.customerName}
                                             onChange={(e) => setFormData({ ...formData, customerName: e.target.value })}
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-sm font-semibold text-slate-700">Phone Number</label>
+                                        <label className="text-sm font-semibold text-slate-700">Nomor HP</label>
                                         <Input
                                             required
                                             type="tel"
                                             className="h-11 bg-slate-50 focus:bg-white"
-                                            placeholder="e.g. +62 8..."
+                                            placeholder="contoh: 0812..."
                                             value={formData.customerPhone}
                                             onChange={(e) => setFormData({ ...formData, customerPhone: e.target.value })}
                                         />
@@ -169,10 +169,10 @@ export default function CheckoutPage() {
 
                                 {formData.deliveryMethod === 'DELIVERY' && (
                                     <div className="space-y-2 animate-in fade-in slide-in-from-top-4 duration-300">
-                                        <label className="text-sm font-semibold text-slate-700">Delivery Address</label>
+                                        <label className="text-sm font-semibold text-slate-700">Alamat Pengiriman</label>
                                         <Textarea
                                             required
-                                            placeholder="Enter your full complete address, block, unit number..."
+                                            placeholder="Masukkan alamat lengkap Anda, RT/RW, kelurahan, kecamatan..."
                                             className="resize-none bg-slate-50 focus:bg-white p-3 min-h-[100px]"
                                             value={formData.customerAddress}
                                             onChange={(e: any) => setFormData({ ...formData, customerAddress: e.target.value })}
@@ -185,21 +185,56 @@ export default function CheckoutPage() {
 
                     <Card className="shadow-sm border-slate-200">
                         <CardHeader className="bg-slate-50 border-b border-slate-100 pb-4">
-                            <CardTitle className="text-xl">Order Review</CardTitle>
+                            <CardTitle className="text-xl">Ringkasan Belanja</CardTitle>
                         </CardHeader>
                         <CardContent className="pt-0">
                             <div className="divide-y divide-slate-100">
                                 {cart.map((item) => (
-                                    <div key={item.id} className="flex gap-4 py-4">
-                                        <div className="h-16 w-16 bg-slate-100 rounded-md border border-slate-200 flex-shrink-0 flex items-center justify-center overflow-hidden">
+                                    <div key={item.id} className="flex gap-3 sm:gap-4 py-4 items-center">
+                                        <div className="h-14 w-14 sm:h-16 sm:w-16 bg-slate-100 rounded-md border border-slate-200 flex-shrink-0 flex items-center justify-center overflow-hidden">
                                             {item.imageUrl ? <img src={item.imageUrl} alt={item.name} className="h-full w-full object-cover" /> : <Store className="h-6 w-6 text-slate-300" />}
                                         </div>
-                                        <div className="flex-1 flex flex-col justify-center">
-                                            <h4 className="font-semibold text-slate-900 line-clamp-1">{item.name}</h4>
-                                            <p className="text-slate-500 text-sm mt-0.5">{formatRupiah(item.sellingPrice)} × {item.quantity}</p>
+                                        <div className="flex-1 min-w-0">
+                                            <h4 className="font-semibold text-slate-900 line-clamp-1 text-sm sm:text-base">{item.name}</h4>
+                                            <p className="text-slate-500 text-xs sm:text-sm mt-0.5">{formatRupiah(item.sellingPrice)}</p>
+                                            <div className="flex items-center gap-2 mt-2">
+                                                <Button
+                                                    variant="outline"
+                                                    size="icon"
+                                                    className="h-7 w-7"
+                                                    onClick={() => {
+                                                        if (item.quantity <= 1) {
+                                                            removeFromCart(item.id);
+                                                        } else {
+                                                            updateQuantity(item.id, item.quantity - 1);
+                                                        }
+                                                    }}
+                                                >
+                                                    <Minus className="h-3 w-3" />
+                                                </Button>
+                                                <span className="text-sm font-semibold w-6 text-center">{item.quantity}</span>
+                                                <Button
+                                                    variant="outline"
+                                                    size="icon"
+                                                    className="h-7 w-7"
+                                                    onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                                                >
+                                                    <Plus className="h-3 w-3" />
+                                                </Button>
+                                            </div>
                                         </div>
-                                        <div className="font-bold text-slate-900 flex items-center">
-                                            {formatRupiah(item.sellingPrice * item.quantity)}
+                                        <div className="flex flex-col items-end gap-2 shrink-0">
+                                            <div className="font-bold text-slate-900 text-sm sm:text-base">
+                                                {formatRupiah(item.sellingPrice * item.quantity)}
+                                            </div>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="h-7 w-7 text-red-400 hover:text-red-600 hover:bg-red-50"
+                                                onClick={() => removeFromCart(item.id)}
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
                                         </div>
                                     </div>
                                 ))}
@@ -212,8 +247,8 @@ export default function CheckoutPage() {
                     <Card className="sticky top-24 shadow-md border-primary/20 bg-slate-50/50">
                         <CardHeader className="pb-4 border-b border-slate-200/60">
                             <CardTitle className="flex justify-between items-center text-xl">
-                                <span>Order Summary</span>
-                                <Badge variant="secondary" className="bg-blue-100 text-blue-700 hover:bg-blue-200">{cart.length} Items</Badge>
+                                <span>Ringkasan Pesanan</span>
+                                <Badge variant="secondary" className="bg-blue-100 text-blue-700 hover:bg-blue-200">{cart.length} Item</Badge>
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="pt-6 space-y-6">
@@ -225,15 +260,15 @@ export default function CheckoutPage() {
                                 </div>
                                 {formData.deliveryMethod === 'DELIVERY' && (
                                     <div className="flex justify-between text-slate-600 animate-in fade-in">
-                                        <span>Delivery Fee estimate</span>
-                                        <span className="font-medium text-amber-600">Calculated Later</span>
+                                        <span>Ongkos kirim (perkiraan)</span>
+                                        <span className="font-medium text-amber-600">Dihitung nanti</span>
                                     </div>
                                 )}
                             </div>
 
                             <div className="border-t border-slate-200 pt-4 flex justify-between items-end">
                                 <div>
-                                    <p className="text-sm font-medium text-slate-500 mb-1">Total to Pay</p>
+                                    <p className="text-sm font-medium text-slate-500 mb-1">Total Pembayaran</p>
                                     <p className="text-3xl font-black text-primary">{formatRupiah(total)}</p>
                                 </div>
                             </div>
@@ -249,11 +284,11 @@ export default function CheckoutPage() {
                                         <div className="h-5 w-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                                         Processing Order...
                                     </div>
-                                ) : "Place Order Now"}
+                                ) : "Buat Pesanan Sekarang"}
                             </Button>
 
                             <p className="text-center text-xs text-slate-500">
-                                By placing this order, you agree to our store policies.
+                                Dengan membuat pesanan, Anda menyetujui kebijakan toko kami.
                             </p>
                         </CardContent>
                     </Card>

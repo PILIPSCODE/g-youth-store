@@ -184,13 +184,13 @@ export default function AdminProductsPage() {
     );
 
     return (
-        <AuthLayout>
+        <AuthLayout allowedRoles={["ADMIN"]}>
             <div className="flex flex-col gap-6">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div>
-                        <h1 className="text-3xl font-bold tracking-tight">Products</h1>
-                        <p className="text-muted-foreground mt-2">
-                            Manage your inventory and catalog.
+                        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Produk</h1>
+                        <p className="text-muted-foreground mt-1 text-sm">
+                            Kelola inventaris dan katalog produk Anda.
                         </p>
                     </div>
 
@@ -200,17 +200,17 @@ export default function AdminProductsPage() {
                     }}>
                         <DialogTrigger asChild>
                             <Button>
-                                <Plus className="mr-2 h-4 w-4" /> Add Product
+                                <Plus className="mr-2 h-4 w-4" /> Tambah Produk
                             </Button>
                         </DialogTrigger>
                         <DialogContent className="sm:max-w-[500px]">
                             <DialogHeader>
-                                <DialogTitle>{isEditing ? "Edit Product" : "Add New Product"}</DialogTitle>
+                                <DialogTitle>{isEditing ? "Edit Produk" : "Tambah Produk Baru"}</DialogTitle>
                             </DialogHeader>
                             <form onSubmit={handleSubmit} className="space-y-4 py-4">
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-2">
-                                        <label className="text-sm font-medium">Name</label>
+                                        <label className="text-sm font-medium">Nama</label>
                                         <Input required value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} />
                                     </div>
                                     <div className="space-y-2">
@@ -221,29 +221,29 @@ export default function AdminProductsPage() {
 
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-2">
-                                        <label className="text-sm font-medium">Buying Price</label>
+                                        <label className="text-sm font-medium">Harga Beli</label>
                                         <Input type="number" required value={formData.costPrice} onChange={e => setFormData({ ...formData, costPrice: e.target.value })} />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-sm font-medium">Selling Price</label>
+                                        <label className="text-sm font-medium">Harga Jual</label>
                                         <Input type="number" required value={formData.sellingPrice} onChange={e => setFormData({ ...formData, sellingPrice: e.target.value })} />
                                     </div>
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-2">
-                                        <label className="text-sm font-medium">Initial Stock</label>
+                                        <label className="text-sm font-medium">Stok Awal</label>
                                         <Input type="number" required value={formData.stock} onChange={e => setFormData({ ...formData, stock: e.target.value })} />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-sm font-medium">Category</label>
+                                        <label className="text-sm font-medium">Kategori</label>
                                         <select
                                             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                                             required
                                             value={formData.categoryId}
                                             onChange={e => setFormData({ ...formData, categoryId: e.target.value })}
                                         >
-                                            <option value="">Select Category</option>
+                                            <option value="">Pilih Kategori</option>
                                             {categories.map(c => (
                                                 <option key={c.id} value={c.id}>{c.name}</option>
                                             ))}
@@ -252,7 +252,7 @@ export default function AdminProductsPage() {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium">Image URL</label>
+                                    <label className="text-sm font-medium">URL Gambar</label>
                                     <Input
                                         type="url"
                                         placeholder="https://example.com/image.jpg"
@@ -262,20 +262,20 @@ export default function AdminProductsPage() {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium">Description</label>
+                                    <label className="text-sm font-medium">Deskripsi</label>
                                     <Input value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} />
                                 </div>
 
                                 <DialogFooter className="pt-4">
-                                    <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)} disabled={isSubmitting}>Cancel</Button>
+                                    <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)} disabled={isSubmitting}>Batal</Button>
                                     <Button type="submit" disabled={isSubmitting}>
                                         {isSubmitting ? (
                                             <>
                                                 <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent"></div>
-                                                Saving...
+                                                Menyimpan...
                                             </>
                                         ) : (
-                                            isEditing ? "Save Changes" : "Create Product"
+                                            isEditing ? "Simpan Perubahan" : "Buat Produk"
                                         )}
                                     </Button>
                                 </DialogFooter>
@@ -289,7 +289,7 @@ export default function AdminProductsPage() {
                         <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                         <Input
                             type="search"
-                            placeholder="Search by name or SKU..."
+                            placeholder="Cari nama atau SKU..."
                             className="pl-8"
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
@@ -297,26 +297,72 @@ export default function AdminProductsPage() {
                     </div>
                 </div>
 
-                <div className="border rounded-md">
+                {/* Mobile Card Layout */}
+                <div className="md:hidden space-y-3">
+                    {isLoading ? (
+                        <div className="text-center py-12 text-muted-foreground">Memuat produk...</div>
+                    ) : filteredProducts.length === 0 ? (
+                        <div className="text-center py-12 text-muted-foreground">Produk tidak ditemukan.</div>
+                    ) : (
+                        filteredProducts.map((product) => (
+                            <div key={product.id} className="bg-white border border-slate-200 rounded-lg p-3 flex gap-3 items-start shadow-sm">
+                                <div className="w-14 h-14 rounded-md bg-slate-100 border border-slate-200 flex-shrink-0 flex items-center justify-center overflow-hidden">
+                                    {product.imageUrl ? (
+                                        <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover" />
+                                    ) : (
+                                        <ImageIcon className="h-5 w-5 text-muted-foreground" />
+                                    )}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-start justify-between gap-2">
+                                        <div className="min-w-0">
+                                            <div className="font-semibold text-sm text-slate-900 truncate">{product.name}</div>
+                                            <div className="text-[11px] text-muted-foreground">SKU: {product.sku}</div>
+                                        </div>
+                                        <div className="flex items-center gap-0.5 shrink-0">
+                                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEditModal(product)}>
+                                                <Edit className="h-3.5 w-3.5" />
+                                            </Button>
+                                            <Button variant="ghost" size="icon" className="h-7 w-7 text-red-500" onClick={() => handleDelete(product.id)}>
+                                                <Trash2 className="h-3.5 w-3.5" />
+                                            </Button>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-2 mt-1.5">
+                                        <span className="text-sm font-bold text-slate-900">{formatRupiah(product.sellingPrice)}</span>
+                                        {product.stock <= 5 ? (
+                                            <Badge variant="destructive" className="text-[10px] px-1.5 py-0">{product.stock} Rendah</Badge>
+                                        ) : (
+                                            <Badge variant="secondary" className="text-[10px] px-1.5 py-0">Stok: {product.stock}</Badge>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        ))
+                    )}
+                </div>
+
+                {/* Desktop Table Layout */}
+                <div className="hidden md:block border rounded-md">
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead className="w-[80px]">Image</TableHead>
-                                <TableHead>Product Info</TableHead>
-                                <TableHead>Category</TableHead>
-                                <TableHead>Price</TableHead>
-                                <TableHead>Stock</TableHead>
-                                <TableHead className="text-right">Actions</TableHead>
+                                <TableHead className="w-[60px]">Gambar</TableHead>
+                                <TableHead>Info Produk</TableHead>
+                                <TableHead>Kategori</TableHead>
+                                <TableHead>Harga</TableHead>
+                                <TableHead>Stok</TableHead>
+                                <TableHead className="text-right">Aksi</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {isLoading ? (
                                 <TableRow>
-                                    <TableCell colSpan={6} className="text-center h-24">Loading products...</TableCell>
+                                    <TableCell colSpan={6} className="text-center h-24">Memuat produk...</TableCell>
                                 </TableRow>
                             ) : filteredProducts.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={6} className="text-center h-24 text-muted-foreground">No products found.</TableCell>
+                                    <TableCell colSpan={6} className="text-center h-24 text-muted-foreground">Produk tidak ditemukan.</TableCell>
                                 </TableRow>
                             ) : (
                                 filteredProducts.map((product) => (
@@ -334,14 +380,14 @@ export default function AdminProductsPage() {
                                             <div className="font-medium">{product.name}</div>
                                             <div className="text-xs text-muted-foreground">SKU: {product.sku}</div>
                                         </TableCell>
-                                        <TableCell>{product.category?.name || "Uncategorized"}</TableCell>
+                                        <TableCell>{product.category?.name || "Tanpa Kategori"}</TableCell>
                                         <TableCell>
-                                            <div>{formatRupiah(product.sellingPrice)}</div>
-                                            <div className="text-xs text-muted-foreground">Buy: {formatRupiah(product.costPrice)}</div>
+                                            <div className="text-sm">{formatRupiah(product.sellingPrice)}</div>
+                                            <div className="text-xs text-muted-foreground">Beli: {formatRupiah(product.costPrice)}</div>
                                         </TableCell>
                                         <TableCell>
                                             {product.stock <= 5 ? (
-                                                <Badge variant="destructive">{product.stock} (Low)</Badge>
+                                                <Badge variant="destructive">{product.stock} (Rendah)</Badge>
                                             ) : (
                                                 <Badge variant="secondary">{product.stock}</Badge>
                                             )}

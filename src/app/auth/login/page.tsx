@@ -30,14 +30,22 @@ export default function LoginPage() {
             });
 
             if (res?.error) {
-                toast.error("Invalid email or password");
+                toast.error("Email atau kata sandi salah");
             } else {
-                toast.success("Login successful");
-                router.push("/admin/dashboard");
+                toast.success("Berhasil masuk");
+                // Fetch session to determine role-based redirect
+                const { getSession } = await import("next-auth/react");
+                const session = await getSession();
+                const role = (session?.user as { role?: string })?.role;
+                if (role === "CASHIER") {
+                    router.push("/pos");
+                } else {
+                    router.push("/admin/dashboard");
+                }
                 router.refresh();
             }
         } catch (error) {
-            toast.error("An error occurred during login");
+            toast.error("Terjadi kesalahan saat login");
         } finally {
             setIsLoading(false);
         }
@@ -59,9 +67,9 @@ export default function LoginPage() {
 
                 <Card className="border-none shadow-xl">
                     <CardHeader className="space-y-1">
-                        <CardTitle className="text-2xl text-center">Staff Login</CardTitle>
+                        <CardTitle className="text-2xl text-center">Login Staf</CardTitle>
                         <CardDescription className="text-center">
-                            Enter your credentials to access the system
+                            Masukkan kredensial Anda untuk mengakses sistem
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -79,7 +87,7 @@ export default function LoginPage() {
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="password">Password</Label>
+                                <Label htmlFor="password">Kata Sandi</Label>
                                 <Input
                                     id="password"
                                     type="password"
@@ -94,13 +102,13 @@ export default function LoginPage() {
                                 className="w-full h-11 text-base font-semibold"
                                 disabled={isLoading}
                             >
-                                {isLoading ? "Signing in..." : "Sign In"}
+                                {isLoading ? "Memproses..." : "Masuk"}
                             </Button>
                         </form>
                     </CardContent>
                     <CardFooter className="flex justify-center">
                         <p className="text-xs text-muted-foreground">
-                            Protected by internal church network policies.
+                            Dilindungi oleh kebijakan internal GKJ Gebyok.
                         </p>
                     </CardFooter>
                 </Card>

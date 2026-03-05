@@ -11,7 +11,9 @@ const categorySchema = z.object({
 export const GET = async () => {
     try {
         const categories = await categoryService.getAllCategories();
-        return apiResponse(categories);
+        return apiResponse(categories, 200, {
+            "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400"
+        });
     } catch (error) {
         return apiError((error as Error).message, 500);
     }

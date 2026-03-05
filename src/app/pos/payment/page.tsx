@@ -102,15 +102,15 @@ export default function PaymentPage() {
     if (cart.length === 0 && !isSubmitting) return null;
 
     return (
-        <AuthLayout>
+        <AuthLayout allowedRoles={["ADMIN", "CASHIER"]}>
             <div className="max-w-4xl mx-auto flex flex-col gap-6">
                 <div className="flex items-center gap-4">
                     <Button variant="outline" size="icon" onClick={() => router.push("/pos")}>
                         <ArrowLeft className="h-4 w-4" />
                     </Button>
                     <div>
-                        <h1 className="text-3xl font-bold tracking-tight">Payment</h1>
-                        <p className="text-muted-foreground mt-1">Complete current transaction</p>
+                        <h1 className="text-3xl font-bold tracking-tight">Pembayaran</h1>
+                        <p className="text-muted-foreground mt-1">Transaksi saat ini</p>
                     </div>
                 </div>
 
@@ -118,7 +118,7 @@ export default function PaymentPage() {
                     {/* Summary Card */}
                     <Card className="bg-slate-50 border-none shadow-sm">
                         <CardHeader className="pb-4">
-                            <CardTitle className="text-lg text-muted-foreground font-medium">Order Total</CardTitle>
+                            <CardTitle className="text-lg text-muted-foreground font-medium">Total Order</CardTitle>
                             <div className="text-5xl font-black text-primary truncate py-2">
                                 {formatRupiah(totalAmount)}
                             </div>
@@ -136,7 +136,7 @@ export default function PaymentPage() {
                     {/* Payment Input */}
                     <Card>
                         <CardHeader>
-                            <CardTitle>Payment Methods</CardTitle>
+                            <CardTitle>Metode Pembayaran</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-6">
                             <div className="space-y-4">
@@ -180,29 +180,29 @@ export default function PaymentPage() {
 
                             {remaining > 0 && payments.length < 4 && (
                                 <Button variant="outline" className="w-full border-dashed" onClick={addPaymentMethod}>
-                                    <Plus className="mr-2 h-4 w-4" /> Add Split Payment
+                                    <Plus className="mr-2 h-4 w-4" /> Tambah Metode Pembayaran Terpisah
                                 </Button>
                             )}
 
                             <div className="pt-6 border-t space-y-3">
                                 <div className="flex justify-between text-lg font-medium">
-                                    <span className="text-muted-foreground">Total Paid</span>
+                                    <span className="text-muted-foreground">Total Dibayar</span>
                                     <span>{formatRupiah(totalPaid)}</span>
                                 </div>
 
                                 {remaining > 0 ? (
                                     <div className="flex justify-between text-lg text-destructive font-bold">
-                                        <span>Amount Due</span>
+                                        <span>Saldo yang Harus Dibayar</span>
                                         <span>{formatRupiah(remaining)}</span>
                                     </div>
                                 ) : change > 0 ? (
                                     <div className="flex justify-between text-xl text-green-600 font-bold bg-green-50 p-3 rounded-lg">
-                                        <span>Change</span>
+                                        <span>Kembalian</span>
                                         <span>{formatRupiah(change)}</span>
                                     </div>
                                 ) : (
                                     <div className="flex justify-between text-xl text-green-600 font-bold bg-green-50 p-3 rounded-lg">
-                                        <span>Fully Paid</span>
+                                        <span>Lunas</span>
                                         <CheckCircle2 className="h-6 w-6" />
                                     </div>
                                 )}

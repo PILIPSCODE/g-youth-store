@@ -94,7 +94,7 @@ export default function PosTransactionPage() {
     });
 
     return (
-        <AuthLayout>
+        <AuthLayout allowedRoles={["ADMIN", "CASHIER"]}>
             <div className="flex flex-col lg:flex-row gap-6 h-[calc(100vh-6rem)]">
                 {/* Left Panel: Products */}
                 <div className="flex-1 flex flex-col gap-4 min-h-[500px]">

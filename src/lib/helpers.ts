@@ -3,8 +3,8 @@ import { NextResponse } from "next/server";
 /**
  * Standardized API response helper
  */
-export function apiResponse<T>(data: T, status: number = 200) {
-    return NextResponse.json({ success: true, data }, { status });
+export function apiResponse<T>(data: T, status: number = 200, headers?: HeadersInit) {
+    return NextResponse.json({ success: true, data }, { status, headers });
 }
 
 export function apiError(message: string, status: number = 400) {

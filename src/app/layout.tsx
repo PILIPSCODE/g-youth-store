@@ -16,7 +16,7 @@ import { Providers } from "@/components/providers";
 
 export const metadata: Metadata = {
   title: "G-YOUTH STORE",
-  description: "Faith. Community. Good vibes.Discover inspiring merch, tasty food, and refreshing drinks made for young people who love to grow and connect together.",
+  description: "G-YOUTH STORE — Toko usaha Komisi Remaja GKJ Gebyok. Dukung pelayanan kami melalui setiap pembelian Anda.",
 };
 
 export default function RootLayout({
