@@ -1,0 +1,160 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  ADMIN
+  CASHIER
+}
+
+enum PaymentMethod {
+  CASH
+  QRIS
+  BANK_TRANSFER
+  E_WALLET
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  CANCELLED
+}
+
+enum POStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+}
+
+enum DeliveryMethod {
+  PICKUP
+  DELIVERY
+}
+
+model User {
+  id           String        @id @default(uuid())
+  name         String
+  email        String        @unique
+  password     String
+  role         Role          @default(CASHIER)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  transactions Transaction[]
+  activityLogs ActivityLog[]
+}
+
+model Category {
+  id        String    @id @default(uuid())
+  name      String    @unique
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  products  Product[]
+}
+
+model Product {
+  id                 String              @id @default(uuid())
+  name               String
+  sku                String              @unique
+  categoryId         String
+  costPrice          Int
+  sellingPrice       Int
+  stock              Int                 @default(0)
+  minStockAlert      Int                 @default(5)
+  imageUrl           String?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  category           Category            @relation(fields: [categoryId], references: [id])
+  transactionItems   TransactionItem[]
+  purchaseOrderItems PurchaseOrderItem[]
+}
+
+model Transaction {
+  id            String            @id @default(uuid())
+  invoiceNumber String            @unique
+  cashierId     String
+  customerId    String?
+  subtotal      Int
+  discount      Int               @default(0)
+  tax           Int               @default(0)
+  total         Int
+  paymentStatus PaymentStatus     @default(PENDING)
+  createdAt     DateTime          @default(now())
+  cashier       User              @relation(fields: [cashierId], references: [id])
+  items         TransactionItem[]
+  payments      Payment[]
+}
+
+model TransactionItem {
+  id            String      @id @default(uuid())
+  transactionId String
+  productId     String
+  productName   String
+  quantity      Int
+  costPrice     Int
+  sellingPrice  Int
+  subtotal      Int
+  transaction   Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  product       Product     @relation(fields: [productId], references: [id])
+}
+
+model Payment {
+  id              String        @id @default(uuid())
+  transactionId   String
+  method          PaymentMethod
+  amount          Int
+  referenceNumber String?
+  paidAt          DateTime      @default(now())
+  transaction     Transaction   @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+}
+
+model ActivityLog {
+  id        String   @id @default(uuid())
+  userId    String
+  action    String
+  metadata  Json?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  title     String
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model Customer {
+  id             String          @id @default(uuid())
+  name           String
+  phone          String
+  address        String?
+  createdAt      DateTime        @default(now())
+  purchaseOrders PurchaseOrder[]
+}
+
+model PurchaseOrder {
+  id             String              @id @default(uuid())
+  customerId     String
+  status         POStatus            @default(PENDING)
+  deliveryMethod DeliveryMethod      @default(PICKUP)
+  totalAmount    Int
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+  customer       Customer            @relation(fields: [customerId], references: [id])
+  items          PurchaseOrderItem[]
+}
+
+model PurchaseOrderItem {
+  id              String        @id @default(uuid())
+  purchaseOrderId String
+  productId       String
+  quantity        Int
+  price           Int
+  purchaseOrder   PurchaseOrder @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
+  product         Product       @relation(fields: [productId], references: [id])
+}
