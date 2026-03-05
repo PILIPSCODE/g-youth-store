@@ -68,6 +68,7 @@ export const GET = withAuth(async (req: NextRequest) => {
                 { header: "No. Invoice", key: "invoiceNumber", width: 20 },
                 { header: "Tanggal", key: "date", width: 15 },
                 { header: "Kasir", key: "cashier", width: 20 },
+                { header: "Detail Produk", key: "products", width: 40 },
                 { header: "Subtotal", key: "subtotal", width: 15 },
                 { header: "Diskon", key: "discount", width: 15 },
                 { header: "Pajak", key: "tax", width: 15 },
@@ -85,15 +86,17 @@ export const GET = withAuth(async (req: NextRequest) => {
             sheet.getRow(1).font = { bold: true, color: { argb: "FFFFFFFF" } };
 
             for (const t of transactions) {
+                const productDetails = t.items.map((i: any) => `${i.productName} (${i.quantity})`).join(", ");
                 sheet.addRow({
                     invoiceNumber: t.invoiceNumber,
                     date: t.createdAt.toISOString().slice(0, 10),
                     cashier: t.cashier.name,
+                    products: productDetails,
                     subtotal: formatRupiah(t.subtotal),
                     discount: formatRupiah(t.discount),
                     tax: formatRupiah(t.tax),
                     total: formatRupiah(t.total),
-                    paymentMethod: t.payments.map((p) => p.method).join(", "),
+                    paymentMethod: t.payments.map((p: any) => p.method).join(", "),
                 });
             }
         } else if (type === "products") {
