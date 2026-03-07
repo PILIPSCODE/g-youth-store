@@ -120,7 +120,7 @@ export const transactionRepository = {
             });
 
             return transaction;
-        });
+        }, { maxWait: 10000, timeout: 20000 });
     },
 
     async updateStatus(id: string, status: PaymentStatus) {

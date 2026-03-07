@@ -3,6 +3,7 @@ import { productRepository } from "@/repositories/product.repository";
 import { activityLogRepository } from "@/repositories/activityLog.repository";
 import { generateInvoiceNumber } from "@/lib/helpers";
 import { PaymentStatus } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 
 interface CreateTransactionInput {
     cashierId: string;
@@ -76,10 +77,15 @@ export const transactionService = {
 
         const invoiceNumber = generateInvoiceNumber();
 
+        const activeRegister = await prisma.cashRegister.findFirst({
+            where: { userId: input.cashierId, closedAt: null }
+        });
+
         const transaction = await transactionRepository.create(
             {
                 invoiceNumber,
                 cashier: { connect: { id: input.cashierId } },
+                ...(activeRegister ? { cashRegister: { connect: { id: activeRegister.id } } } : {}),
                 subtotal,
                 discount,
                 tax,

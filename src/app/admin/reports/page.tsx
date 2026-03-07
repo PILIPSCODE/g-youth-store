@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Download, FileSpreadsheet } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { formatRupiah } from "@/lib/currency";
 
 export default function AdminReportsPage() {
     const [startDate, setStartDate] = useState(format(new Date(), "yyyy-MM-01"));
@@ -16,6 +17,8 @@ export default function AdminReportsPage() {
     const [paymentMethod, setPaymentMethod] = useState("");
     const [statusFilter, setStatusFilter] = useState("PAID");
     const [cashiers, setCashiers] = useState<{ id: string; name: string }[]>([]);
+    const [financialData, setFinancialData] = useState<any>(null);
+    const [isLoadingFinancials, setIsLoadingFinancials] = useState(false);
 
     useEffect(() => {
         const fetchCashiers = async () => {
@@ -31,6 +34,29 @@ export default function AdminReportsPage() {
         };
         fetchCashiers();
     }, []);
+
+    useEffect(() => {
+        const fetchFinancials = async () => {
+            setIsLoadingFinancials(true);
+            try {
+                const params = new URLSearchParams();
+                if (startDate) params.append("startDate", startDate);
+                if (endDate) params.append("endDate", endDate);
+
+                const res = await fetch(`/api/reports/financial?${params.toString()}`);
+                const data = await res.json();
+
+                if (data.success) {
+                    setFinancialData(data.data);
+                }
+            } catch (error) {
+                console.error("Failed to fetch financial reports");
+            } finally {
+                setIsLoadingFinancials(false);
+            }
+        };
+        fetchFinancials();
+    }, [startDate, endDate]);
 
     const handleExport = (type: "excel") => {
         const params = new URLSearchParams();
@@ -50,8 +76,77 @@ export default function AdminReportsPage() {
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">Laporan</h1>
                     <p className="text-muted-foreground mt-2">
-                        Buat dan unduh laporan transaksi.
+                        Ringkasan finansial dan unduh laporan transaksi.
                     </p>
+                </div>
+
+                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                    <Card className="border-l-4 border-l-blue-500 shadow-sm">
+                        <CardHeader className="pb-2">
+                            <CardTitle className="text-sm font-medium">Laporan Penjualan & Laba</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="space-y-2 mt-2">
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-muted-foreground">Total Penjualan:</span>
+                                    <span className="font-semibold">{financialData ? formatRupiah(financialData.salesReport.totalSales) : "..."}</span>
+                                </div>
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-muted-foreground">Total HPP (Modal Barang):</span>
+                                    <span className="font-semibold text-rose-600">-{financialData ? formatRupiah(financialData.salesReport.totalCOGS) : "..."}</span>
+                                </div>
+                                <div className="border-t pt-2 flex justify-between font-bold text-base mt-2">
+                                    <span>Laba Bersih:</span>
+                                    <span className="text-emerald-600">{financialData ? formatRupiah(financialData.salesReport.profit) : "..."}</span>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card className="border-l-4 border-l-amber-500 shadow-sm md:col-span-2">
+                        <CardHeader className="pb-2">
+                            <CardTitle className="text-sm font-medium">Laporan Arus Kas Laci (Tutup Shift)</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
+                                <div className="space-y-2">
+                                    <div className="flex justify-between text-sm">
+                                        <span className="text-muted-foreground">Total Kas Awal:</span>
+                                        <span className="font-medium">{financialData ? formatRupiah(financialData.cashReport.totalOpeningCash) : "..."}</span>
+                                    </div>
+                                    <div className="flex justify-between text-sm">
+                                        <span className="text-muted-foreground">Penjualan Tunai:</span>
+                                        <span className="font-medium text-emerald-600">+{financialData ? formatRupiah(financialData.cashReport.totalCashSales) : "..."}</span>
+                                    </div>
+                                    <div className="flex justify-between text-sm border-b pb-2">
+                                        <span className="text-muted-foreground">Pengeluaran Kas:</span>
+                                        <span className="font-medium text-rose-600">-{financialData ? formatRupiah(financialData.cashReport.totalExpenses) : "..."}</span>
+                                    </div>
+                                    <div className="flex justify-between text-sm font-semibold pt-1">
+                                        <span>Kas Diharapkan:</span>
+                                        <span>{financialData ? formatRupiah(financialData.cashReport.totalExpectedCash) : "..."}</span>
+                                    </div>
+                                </div>
+                                <div className="space-y-2 sm:border-l sm:pl-4">
+                                    <div className="flex justify-between text-sm mt-8 sm:mt-0 font-semibold">
+                                        <span>Kas Aktual (Fisik Laci):</span>
+                                        <span>{financialData ? formatRupiah(financialData.cashReport.totalClosingCash) : "..."}</span>
+                                    </div>
+                                    <div className="flex justify-between text-sm">
+                                        <span className="text-muted-foreground">Selisih Kas:</span>
+                                        <span className={`font-bold ${financialData && financialData.cashReport.totalDifference < 0 ? 'text-rose-600' : 'text-emerald-600'}`}>
+                                            {financialData ? formatRupiah(financialData.cashReport.totalDifference) : "..."}
+                                        </span>
+                                    </div>
+                                    {financialData && financialData.cashReport.totalDifference < 0 && (
+                                        <p className="text-[10px] text-rose-500 leading-tight">
+                                            * Terdapat selisih minus, kemungkinan ada kesalahan input atau uang hilang di laci kasir.
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
                 </div>
 
                 <Card>
@@ -127,7 +222,7 @@ export default function AdminReportsPage() {
                         <div className="mt-8 flex flex-col sm:flex-row gap-4">
                             <Button onClick={() => handleExport("excel")} className="w-full sm:w-auto bg-green-600 hover:bg-green-700">
                                 <FileSpreadsheet className="mr-2 h-4 w-4" />
-                                Ekspor ke Excel
+                                Ekspor Semua Trx ke Excel
                             </Button>
                         </div>
                     </CardContent>

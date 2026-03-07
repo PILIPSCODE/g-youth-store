@@ -8,7 +8,10 @@ import {
     FileText,
     ShoppingCart,
     LogOut,
-    Menu
+    Menu,
+    Wallet,
+    Truck,
+    FolderTree
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store/useAppStore";
@@ -16,10 +19,13 @@ import { Button } from "@/components/ui/button";
 
 const adminNavItems = [
     { title: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
+    { title: "Kategori", href: "/admin/categories", icon: FolderTree },
     { title: "Produk", href: "/admin/products", icon: Package },
+    { title: "Pembelian Stok", href: "/admin/purchases", icon: Truck },
+    { title: "Pesanan Masuk", href: "/admin/purchase-orders", icon: ShoppingCart },
+    { title: "Modal Usaha", href: "/admin/capital", icon: Wallet },
     { title: "Pengguna", href: "/admin/users", icon: Users },
     { title: "Laporan", href: "/admin/reports", icon: FileText },
-    { title: "Pesanan Masuk", href: "/admin/purchase-orders", icon: ShoppingCart },
 ];
 
 const cashierNavItems = [

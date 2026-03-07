@@ -48,6 +48,7 @@ export default function AdminProductsPage() {
     const [categories, setCategories] = useState<Category[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [search, setSearch] = useState("");
+    const [selectedCategory, setSelectedCategory] = useState("ALL");
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     // Modal state
@@ -178,10 +179,12 @@ export default function AdminProductsPage() {
         }
     };
 
-    const filteredProducts = products.filter((p) =>
-        p.name.toLowerCase().includes(search.toLowerCase()) ||
-        p.sku.toLowerCase().includes(search.toLowerCase())
-    );
+    const filteredProducts = products.filter((p) => {
+        const matchesSearch = p.name.toLowerCase().includes(search.toLowerCase()) ||
+            p.sku.toLowerCase().includes(search.toLowerCase());
+        const matchesCategory = selectedCategory === "ALL" || p.categoryId === selectedCategory;
+        return matchesSearch && matchesCategory;
+    });
 
     return (
         <AuthLayout allowedRoles={["ADMIN"]}>
@@ -284,8 +287,8 @@ export default function AdminProductsPage() {
                     </Dialog>
                 </div>
 
-                <div className="flex items-center gap-2 max-w-sm">
-                    <div className="relative flex-1">
+                <div className="flex flex-col sm:flex-row items-center gap-2 max-w-2xl">
+                    <div className="relative flex-1 w-full sm:max-w-sm">
                         <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                         <Input
                             type="search"
@@ -294,6 +297,20 @@ export default function AdminProductsPage() {
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                         />
+                    </div>
+                    <div className="w-full sm:w-64">
+                        <select
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            value={selectedCategory}
+                            onChange={(e) => setSelectedCategory(e.target.value)}
+                        >
+                            <option value="ALL">Semua Kategori</option>
+                            {categories.map((c) => (
+                                <option key={c.id} value={c.id}>
+                                    {c.name}
+                                </option>
+                            ))}
+                        </select>
                     </div>
                 </div>
 

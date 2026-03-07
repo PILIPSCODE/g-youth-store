@@ -27,6 +27,7 @@ export default function AdminDashboardPage() {
     const [dailyData, setDailyData] = useState<any>(null);
     const [monthlyData, setMonthlyData] = useState<any>(null);
     const [topProducts, setTopProducts] = useState<any[]>([]);
+    const [totalProducts, setTotalProducts] = useState(0);
     const [lowStockCount, setLowStockCount] = useState(0);
     const [chartData, setChartData] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -55,6 +56,7 @@ export default function AdminDashboardPage() {
                 setMonthlyData(monthly);
                 setTopProducts(top.data || []);
                 setChartData(chart.data || []);
+                setTotalProducts(products.data?.pagination?.total || products.data?.products?.length || 0);
 
                 const lowStock = (products.data?.products || []).filter((p: any) => p.stock <= 5).length;
                 setLowStockCount(lowStock);
@@ -151,7 +153,7 @@ export default function AdminDashboardPage() {
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold">
-                                {topProducts.length > 0 ? topProducts.length + "+" : "0"}
+                                {totalProducts}
                             </div>
                             <p className="text-xs text-muted-foreground mt-1 font-medium">
                                 Active products in catalog

@@ -118,7 +118,7 @@ export default function CheckoutPage() {
                                 >
                                     <Store className="h-8 w-8" />
                                     <div className="text-center">
-                                        <div className="font-bold text-slate-900">Ambil di Toko</div>
+                                        <div className="font-bold text-slate-900">Ambil di Gereja Minggu Besuk</div>
                                         <div className="text-xs font-medium text-emerald-600 mt-1">Gratis</div>
                                     </div>
                                 </div>

@@ -36,15 +36,16 @@ enum DeliveryMethod {
 }
 
 model User {
-  id           String        @id @default(uuid())
-  name         String
-  email        String        @unique
-  password     String
-  role         Role          @default(CASHIER)
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  transactions Transaction[]
-  activityLogs ActivityLog[]
+  id            String         @id @default(uuid())
+  name          String
+  email         String         @unique
+  password      String
+  role          Role           @default(CASHIER)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  transactions  Transaction[]
+  activityLogs  ActivityLog[]
+  cashRegisters CashRegister[]
 }
 
 model Category {
@@ -56,36 +57,39 @@ model Category {
 }
 
 model Product {
-  id                 String              @id @default(uuid())
-  name               String
-  sku                String              @unique
-  categoryId         String
-  costPrice          Int
-  sellingPrice       Int
-  stock              Int                 @default(0)
-  minStockAlert      Int                 @default(5)
-  imageUrl           String?
-  createdAt          DateTime            @default(now())
-  updatedAt          DateTime            @updatedAt
-  category           Category            @relation(fields: [categoryId], references: [id])
-  transactionItems   TransactionItem[]
-  purchaseOrderItems PurchaseOrderItem[]
+  id                     String                  @id @default(uuid())
+  name                   String
+  sku                    String                  @unique
+  categoryId             String
+  costPrice              Int
+  sellingPrice           Int
+  stock                  Int                     @default(0)
+  minStockAlert          Int                     @default(5)
+  imageUrl               String?
+  createdAt              DateTime                @default(now())
+  updatedAt              DateTime                @updatedAt
+  category               Category                @relation(fields: [categoryId], references: [id])
+  transactionItems       TransactionItem[]
+  purchaseOrderItems     PurchaseOrderItem[]
+  inventoryPurchaseItems InventoryPurchaseItem[]
 }
 
 model Transaction {
-  id            String            @id @default(uuid())
-  invoiceNumber String            @unique
-  cashierId     String
-  customerId    String?
-  subtotal      Int
-  discount      Int               @default(0)
-  tax           Int               @default(0)
-  total         Int
-  paymentStatus PaymentStatus     @default(PENDING)
-  createdAt     DateTime          @default(now())
-  cashier       User              @relation(fields: [cashierId], references: [id])
-  items         TransactionItem[]
-  payments      Payment[]
+  id             String            @id @default(uuid())
+  invoiceNumber  String            @unique
+  cashierId      String
+  customerId     String?
+  subtotal       Int
+  discount       Int               @default(0)
+  tax            Int               @default(0)
+  total          Int
+  paymentStatus  PaymentStatus     @default(PENDING)
+  createdAt      DateTime          @default(now())
+  cashRegisterId String? // Added for shift management
+  cashier        User              @relation(fields: [cashierId], references: [id])
+  cashRegister   CashRegister?     @relation(fields: [cashRegisterId], references: [id])
+  items          TransactionItem[]
+  payments       Payment[]
 }
 
 model TransactionItem {
@@ -157,4 +161,52 @@ model PurchaseOrderItem {
   price           Int
   purchaseOrder   PurchaseOrder @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
   product         Product       @relation(fields: [productId], references: [id])
+}
+
+model Capital {
+  id          String   @id @default(uuid())
+  amount      Int
+  description String
+  createdAt   DateTime @default(now())
+}
+
+model InventoryPurchase {
+  id        String                  @id @default(uuid())
+  supplier  String
+  totalCost Int
+  createdAt DateTime                @default(now())
+  items     InventoryPurchaseItem[]
+}
+
+model InventoryPurchaseItem {
+  id         String            @id @default(uuid())
+  purchaseId String
+  productId  String
+  quantity   Int
+  costPrice  Int
+  purchase   InventoryPurchase @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
+  product    Product           @relation(fields: [productId], references: [id])
+}
+
+model CashRegister {
+  id           String        @id @default(uuid())
+  userId       String
+  openingCash  Int
+  expectedCash Int?
+  closingCash  Int?
+  difference   Int?
+  openedAt     DateTime      @default(now())
+  closedAt     DateTime?
+  user         User          @relation(fields: [userId], references: [id])
+  expenses     CashExpense[]
+  transactions Transaction[]
+}
+
+model CashExpense {
+  id             String       @id @default(uuid())
+  cashRegisterId String
+  amount         Int
+  description    String
+  createdAt      DateTime     @default(now())
+  cashRegister   CashRegister @relation(fields: [cashRegisterId], references: [id], onDelete: Cascade)
 }
