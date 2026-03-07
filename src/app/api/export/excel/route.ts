@@ -42,7 +42,7 @@ export const GET = withAuth(async (req: NextRequest) => {
                 // Add 1 day to end date to include the whole day
                 if (endDate) {
                     const end = new Date(endDate);
-                    end.setHours(23, 59, 59, 999);
+                    end.setUTCHours(23, 59, 59, 999);
                     createdAt.lte = end;
                 }
                 where.createdAt = createdAt;

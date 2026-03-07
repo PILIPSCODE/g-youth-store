@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Search, Plus, Minus, Trash2, ShoppingCart, Image as ImageIcon } from "lucide-react";
 import { formatRupiah } from "@/lib/currency";
 import { toast } from "sonner";
+import { ShiftManager } from "@/components/pos/shift-manager";
 
 interface Category {
     id: string;
@@ -95,7 +96,14 @@ export default function PosTransactionPage() {
 
     return (
         <AuthLayout allowedRoles={["ADMIN", "CASHIER"]}>
-            <div className="flex flex-col lg:flex-row gap-6 h-[calc(100vh-6rem)]">
+            <div className="mb-4 flex items-center justify-between">
+                <div>
+                    <h1 className="text-2xl font-bold tracking-tight">Kasir (POS)</h1>
+                    <p className="text-muted-foreground text-sm">Pilih produk dan selesaikan transaksi.</p>
+                </div>
+                <ShiftManager />
+            </div>
+            <div className="flex flex-col lg:flex-row gap-6 h-[calc(100vh-10rem)]">
                 {/* Left Panel: Products */}
                 <div className="flex-1 flex flex-col gap-4 min-h-[500px]">
                     <div className="flex flex-col sm:flex-row gap-2">

@@ -99,6 +99,23 @@ export default function AdminReportsPage() {
                                     <span>Laba Bersih:</span>
                                     <span className="text-emerald-600">{financialData ? formatRupiah(financialData.salesReport.profit) : "..."}</span>
                                 </div>
+                                <div className="border-t mt-4 pt-2 space-y-2">
+                                    <div className="flex justify-between text-sm">
+                                        <span className="text-muted-foreground">Nilai Inventaris (Modal):</span>
+                                        <span className="font-medium text-amber-600">{financialData ? formatRupiah(financialData.salesReport.totalInventoryValue) : "..."}</span>
+                                    </div>
+                                    <div className="flex justify-between text-sm">
+                                        <span className="text-muted-foreground">Potensi Laba (Unrealized):</span>
+                                        <span className="font-semibold text-emerald-600">{financialData ? formatRupiah(financialData.salesReport.unrealizedProfit) : "..."}</span>
+                                    </div>
+                                    <div className="flex justify-between font-bold text-base border-t mt-2 pt-2">
+                                        <span>Total Aset Fisik & Barang:</span>
+                                        <span className="text-blue-600">{financialData ? formatRupiah(financialData.salesReport.totalAssetValue) : "..."}</span>
+                                    </div>
+                                    <p className="text-[10px] text-muted-foreground leading-tight mt-1">
+                                        * Total Aset = Kas Aktual Laci + Modal Inventaris + Potensi Laba (Estimasi jika semua barang terjual).
+                                    </p>
+                                </div>
                             </div>
                         </CardContent>
                     </Card>

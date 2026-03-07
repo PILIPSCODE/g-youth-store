@@ -11,9 +11,14 @@ export const GET = withAuth(async (req: NextRequest) => {
 
         let dateFilter: any = {};
         if (startDateParam && endDateParam) {
+            const start = new Date(startDateParam);
+            const end = new Date(endDateParam);
+            // Ensure end date includes the entire day
+            end.setUTCHours(23, 59, 59, 999);
+
             dateFilter = {
-                gte: new Date(startDateParam),
-                lte: new Date(endDateParam),
+                gte: start,
+                lte: end,
             };
         }
 
@@ -51,12 +56,29 @@ export const GET = withAuth(async (req: NextRequest) => {
             // but simpler is: total COGS = sum(costPrice * qty)
             totalCOGS += txCOGS;
 
-            // Calculate cash sales
+            // Calculate exact cash sales considering change
+            const paymentTotal = tx.payments.reduce((sum, p) => sum + p.amount, 0);
+            const change = Math.max(0, paymentTotal - tx.total);
             const cashPayments = tx.payments.filter(p => p.method === "CASH");
-            totalCashSales += cashPayments.reduce((sum, p) => sum + p.amount, 0);
+            const cashPaid = cashPayments.reduce((sum, p) => sum + p.amount, 0);
+            const netCash = Math.max(0, cashPaid - change);
+
+            totalCashSales += netCash;
         });
 
         const profit = totalSales - totalCOGS;
+
+        // 1.5 Unrealized Profit (Potensi Laba dari Stok)
+        const products = await prisma.product.findMany();
+        let unrealizedProfit = 0;
+        let totalInventoryValue = 0;
+
+        products.forEach(p => {
+            if (p.stock > 0) {
+                totalInventoryValue += (p.costPrice * p.stock);
+                unrealizedProfit += ((p.sellingPrice - p.costPrice) * p.stock);
+            }
+        });
 
         // 2. Cash Drawer Status (From closed registers)
         const registers = await prisma.cashRegister.findMany({
@@ -66,22 +88,44 @@ export const GET = withAuth(async (req: NextRequest) => {
             }
         });
 
+        // Group registers to show cumulative shifts
         let totalExpenses = 0;
         let totalOpeningCash = 0;
         let totalClosingCash = 0;
         let totalExpectedCash = 0;
         let totalDifference = 0;
 
-        registers.forEach(reg => {
-            totalOpeningCash += reg.openingCash;
-            totalClosingCash += (reg.closingCash || 0);
-            totalExpectedCash += (reg.expectedCash || 0);
-            totalDifference += (reg.difference || 0);
+        // If there are multiple registers in a day, summing `openingCash` + `openingCash` is illogical for a physical drawer
+        // Instead, the "expected cash" for a day should just be:
+        // First shift opening + Total Cash Sales (from all shifts) - Total Expenses (from all shifts)
+        // AND "actual cash" should be the closing cash of the LAST shift of the day.
 
-            reg.expenses.forEach(ex => {
-                totalExpenses += ex.amount;
+        if (registers.length > 0) {
+            // Sort by openedAt ASC to find first opening and last closing
+            registers.sort((a, b) => a.openedAt.getTime() - b.openedAt.getTime());
+
+            totalOpeningCash = registers[0].openingCash; // Take only the first shift's opening cash
+
+            // The actual physical money left at the end of the day is the last shift's closing cash
+            const lastRegister = registers[registers.length - 1];
+            totalClosingCash = lastRegister.closingCash || 0;
+
+            // Sum up expenses from all shifts
+            registers.forEach(reg => {
+                reg.expenses.forEach(ex => {
+                    totalExpenses += ex.amount;
+                });
             });
-        });
+
+            // Expected cash = Original Starting money + All Income - All Expenses
+            totalExpectedCash = totalOpeningCash + totalCashSales - totalExpenses;
+
+            // Total difference = Actual money in drawer at end of day - Expected money
+            totalDifference = totalClosingCash - totalExpectedCash;
+        }
+
+        // 3. Total Asset Summary (Kas Akhir)
+        const totalAssetValue = totalClosingCash + totalInventoryValue + unrealizedProfit;
 
         return apiResponse({
             salesReport: {
@@ -89,6 +133,9 @@ export const GET = withAuth(async (req: NextRequest) => {
                 totalTransactions: transactions.length,
                 totalCOGS,
                 profit,
+                unrealizedProfit,
+                totalInventoryValue,
+                totalAssetValue
             },
             cashReport: {
                 totalCashSales,

@@ -8,7 +8,6 @@ import { useAppStore } from "@/store/useAppStore";
 import { cn } from "@/lib/utils";
 import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ShiftManager } from "@/components/pos/shift-manager";
 
 interface AuthLayoutProps {
     children: React.ReactNode;
@@ -82,8 +81,6 @@ export function AuthLayout({ children, allowedRoles }: AuthLayoutProps) {
                     </div>
                 </main>
             </div>
-
-            {userRole === "CASHIER" && <ShiftManager />}
         </div>
     );
 }

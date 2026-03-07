@@ -93,9 +93,13 @@ export async function PUT(req: Request) {
         // Calculate expected cash = openingCash + totalCashSales - totalCashExpenses
         let totalCashSales = 0;
         register.transactions.forEach(tx => {
-            // Find cash payments for this transaction
+            const paymentTotal = tx.payments.reduce((sum, p) => sum + p.amount, 0);
+            const change = Math.max(0, paymentTotal - tx.total);
             const cashPayments = tx.payments.filter(p => p.method === "CASH");
-            totalCashSales += cashPayments.reduce((sum, p) => sum + p.amount, 0);
+            const cashPaid = cashPayments.reduce((sum, p) => sum + p.amount, 0);
+            const netCash = Math.max(0, cashPaid - change);
+
+            totalCashSales += netCash;
         });
 
         let totalCashExpenses = 0;

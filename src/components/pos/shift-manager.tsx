@@ -12,7 +12,7 @@ import { Wallet, Settings, LogOut, ReceiptText } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
-export function ShiftManager() {
+export function ShiftManager({ className }: { className?: string }) {
     const { data: session } = useSession();
     const router = useRouter();
 
@@ -167,13 +167,14 @@ export function ShiftManager() {
     return (
         <>
             {activeShift && (
-                <div className="fixed bottom-6 right-6 z-40">
+                <div className={className}>
                     <Button
-                        size="lg"
-                        className="rounded-full shadow-lg gap-2"
+                        size="sm"
+                        variant="secondary"
+                        className="shadow-sm gap-2 w-full sm:w-auto"
                         onClick={() => setShowManageModal(true)}
                     >
-                        <Wallet className="h-5 w-5" />
+                        <Wallet className="h-4 w-4" />
                         Atur Shift
                     </Button>
                 </div>
