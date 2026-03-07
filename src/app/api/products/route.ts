@@ -24,9 +24,7 @@ export const GET = async (req: NextRequest) => {
         const limit = parseInt(searchParams.get("limit") ?? "20");
 
         const result = await productService.getAllProducts({ categoryId, search, page, limit });
-        return apiResponse(result, 200, {
-            "Cache-Control": "public, s-maxage=60, stale-while-revalidate=30"
-        });
+        return apiResponse(result, 200);
     } catch (error) {
         return apiError((error as Error).message, 500);
     }
