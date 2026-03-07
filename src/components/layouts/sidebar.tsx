@@ -16,6 +16,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store/useAppStore";
 import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 const adminNavItems = [
     { title: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
@@ -92,14 +93,17 @@ export function Sidebar() {
                     </nav>
 
                     <div className="px-4 py-4 border-t">
-                        <div className="mb-4">
-                            <p className="text-sm font-medium">{session?.user?.name}</p>
-                            <p className="text-xs text-muted-foreground truncate">{session?.user?.email}</p>
-                            <p className="text-xs font-semibold text-primary mt-1">{session?.user?.role}</p>
+                        <div className="mb-4 flex items-center justify-between">
+                            <div className="overflow-hidden">
+                                <p className="text-sm font-medium truncate">{session?.user?.name}</p>
+                                <p className="text-xs text-muted-foreground truncate">{session?.user?.email}</p>
+                                <p className="text-xs font-semibold text-primary mt-1">{session?.user?.role}</p>
+                            </div>
+                            <ThemeToggle />
                         </div>
                         <Button
                             variant="outline"
-                            className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-50"
+                            className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/50"
                             onClick={() => signOut({ callbackUrl: "/" })}
                         >
                             <LogOut className="mr-2 h-4 w-4" />
