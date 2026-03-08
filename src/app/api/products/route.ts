@@ -21,7 +21,7 @@ export const GET = async (req: NextRequest) => {
         const categoryId = searchParams.get("categoryId") ?? undefined;
         const search = searchParams.get("search") ?? undefined;
         const page = parseInt(searchParams.get("page") ?? "1");
-        const limit = parseInt(searchParams.get("limit") ?? "20");
+        const limit = parseInt(searchParams.get("limit") ?? "10");
 
         const result = await productService.getAllProducts({ categoryId, search, page, limit });
         return apiResponse(result, 200);

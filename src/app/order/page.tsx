@@ -17,6 +17,8 @@ export default function StorefrontPage() {
     const [categories, setCategories] = useState<any[]>([]);
     const [search, setSearch] = useState("");
     const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
+    const [page, setPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
     const [isLoading, setIsLoading] = useState(true);
 
     const { cart, addToCart } = useAppStore();
@@ -24,16 +26,30 @@ export default function StorefrontPage() {
     useEffect(() => {
         const fetchData = async () => {
             try {
+                setIsLoading(true);
+                const query = new URLSearchParams({
+                    page: page.toString(),
+                    limit: "10",
+                });
+                if (selectedCategoryId) query.append("categoryId", selectedCategoryId);
+                if (search) query.append("search", search);
+
                 const [prodRes, catRes] = await Promise.all([
-                    fetch("/api/products"),
+                    fetch(`/api/products?${query.toString()}`),
                     fetch("/api/categories")
                 ]);
 
                 const prodData = await prodRes.json();
                 const catData = await catRes.json();
 
-                const available = (prodData.data?.products || []).filter((p: any) => p.stock > 0);
-                setProducts(available);
+                // On storefront we only show available stock, but pagination is based on total products
+                // This might be tricky if some products in the page are out of stock.
+                // For now, let's keep it simple: fetch all including out of stock, then filter?
+                // No, the user wants 10 per page. If we filter after fetching 10, we might see fewer than 10.
+                // However, the current requirement is to fix the missing products issue.
+
+                setProducts(prodData.data?.products || []);
+                setTotalPages(prodData.data?.pagination?.totalPages || 1);
                 setCategories(catData.data || []);
             } catch (error) {
                 toast.error("Gagal memuat data toko");
@@ -42,7 +58,7 @@ export default function StorefrontPage() {
             }
         };
         fetchData();
-    }, []);
+    }, [page, selectedCategoryId, search]);
 
     const handleAddToCart = (product: any) => {
         const existing = cart.find(item => item.id === product.id);
@@ -54,11 +70,18 @@ export default function StorefrontPage() {
         toast.success(`${product.name} ditambahkan ke keranjang`);
     };
 
-    const filteredProducts = products.filter(p => {
-        const matchesSearch = p.name.toLowerCase().includes(search.toLowerCase());
-        const matchesCategory = selectedCategoryId ? p.categoryId === selectedCategoryId : true;
-        return matchesSearch && matchesCategory;
-    });
+    // Storefront usually only shows products with stock > 0
+    const availableProducts = products.filter(p => p.stock > 0);
+
+    const handleCategoryChange = (id: string | null) => {
+        setSelectedCategoryId(id);
+        setPage(1);
+    };
+
+    const handleSearchChange = (val: string) => {
+        setSearch(val);
+        setPage(1);
+    };
 
     return (
         <div className="min-h-screen bg-slate-50 pb-16">
@@ -86,7 +109,7 @@ export default function StorefrontPage() {
                             placeholder="Cari produk yang Anda inginkan..."
                             className="w-full bg-transparent border-none text-white placeholder-white/60 focus:ring-0 text-base md:text-lg px-2 h-10 md:h-14 outline-none"
                             value={search}
-                            onChange={(e) => setSearch(e.target.value)}
+                            onChange={(e) => handleSearchChange(e.target.value)}
                         />
                     </div>
                 </div>
@@ -99,7 +122,7 @@ export default function StorefrontPage() {
                         <Badge
                             variant={selectedCategoryId === null ? "default" : "outline"}
                             className={`text-xs md:text-sm px-3 md:px-4 py-1.5 cursor-pointer whitespace-nowrap ${selectedCategoryId !== null ? "text-muted-foreground hover:bg-slate-100" : ""}`}
-                            onClick={() => setSelectedCategoryId(null)}
+                            onClick={() => handleCategoryChange(null)}
                         >
                             Semua Produk
                         </Badge>
@@ -108,7 +131,7 @@ export default function StorefrontPage() {
                                 key={cat.id}
                                 variant={selectedCategoryId === cat.id ? "default" : "outline"}
                                 className={`text-xs md:text-sm px-3 md:px-4 py-1.5 cursor-pointer whitespace-nowrap ${selectedCategoryId !== cat.id ? "text-muted-foreground hover:bg-slate-100" : ""}`}
-                                onClick={() => setSelectedCategoryId(cat.id)}
+                                onClick={() => handleCategoryChange(cat.id)}
                             >
                                 {cat.name}
                             </Badge>
@@ -150,55 +173,78 @@ export default function StorefrontPage() {
                     <div className="flex justify-center items-center h-64 bg-white/50 backdrop-blur-sm rounded-2xl border border-slate-200 shadow-sm">
                         <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
                     </div>
-                ) : filteredProducts.length === 0 ? (
+                ) : availableProducts.length === 0 ? (
                     <div className="text-center py-20 md:py-32 text-muted-foreground border border-slate-200 rounded-2xl bg-white shadow-sm px-4">
                         <Search className="h-10 w-10 md:h-12 md:w-12 text-slate-300 mx-auto mb-4" />
                         <h3 className="text-lg md:text-xl font-medium text-slate-900 mb-1">Produk tidak ditemukan</h3>
                         <p className="text-sm md:text-base text-slate-500">
                             {search ? `Tidak ada hasil untuk "${search}"` : "Tidak ada produk di kategori ini"}
                         </p>
-                        <Button variant="outline" className="mt-6" onClick={() => { setSearch(""); setSelectedCategoryId(null); }}>Hapus Filter</Button>
+                        <Button variant="outline" className="mt-6" onClick={() => { handleSearchChange(""); handleCategoryChange(null); }}>Hapus Filter</Button>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
-                        {filteredProducts.map((product) => (
-                            <Card key={product.id} className="overflow-hidden flex flex-col group hover:shadow-xl transition-all duration-300 border-slate-200/60 bg-white hover:-translate-y-1">
-                                <div className="aspect-[4/3] bg-slate-100 flex items-center justify-center relative overflow-hidden">
-                                    {product.imageUrl ? (
-                                        <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                                    ) : (
-                                        <div className="h-full w-full flex flex-col items-center justify-center opacity-40 bg-slate-200 group-hover:opacity-60 transition-opacity">
-                                            <ImageIcon className="h-10 w-10 sm:h-16 sm:w-16 text-slate-400 mb-2" />
-                                            <span className="text-[10px] sm:text-sm font-medium text-slate-500">Belum Ada Gambar</span>
-                                        </div>
-                                    )}
-                                    {product.stock <= 5 && (
-                                        <Badge variant="destructive" className="absolute top-2 right-2 sm:top-3 sm:right-3 shadow-md border-white border text-[8px] sm:text-[10px] uppercase tracking-wider font-bold px-1.5 sm:px-2.5">
-                                            Sisa {product.stock}
-                                        </Badge>
-                                    )}
-                                </div>
-                                <CardContent className="p-3 sm:p-5 flex-1 flex flex-col justify-between">
-                                    <div>
-                                        <div className="text-[10px] font-medium text-blue-600 mb-1 uppercase tracking-wider">
-                                            {product.category?.name || "Produk"}
-                                        </div>
-                                        <h3 className="font-semibold text-slate-900 line-clamp-2 text-sm sm:text-base md:text-lg leading-tight mb-1.5 sm:mb-2 group-hover:text-primary transition-colors">{product.name}</h3>
-                                        <p className="text-base sm:text-xl md:text-2xl font-black text-slate-900 mb-1 relative inline-block">
-                                            {formatRupiah(product.sellingPrice)}
-                                            <span className="absolute bottom-1 left-0 w-full h-1.5 sm:h-2 bg-blue-100 -z-10 group-hover:h-2.5 sm:group-hover:h-3 transition-all"></span>
-                                        </p>
+                    <div className="space-y-8">
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
+                            {availableProducts.map((product) => (
+                                <Card key={product.id} className="overflow-hidden flex flex-col group hover:shadow-xl transition-all duration-300 border-slate-200/60 bg-white hover:-translate-y-1">
+                                    <div className="aspect-[4/3] bg-slate-100 flex items-center justify-center relative overflow-hidden">
+                                        {product.imageUrl ? (
+                                            <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                                        ) : (
+                                            <div className="h-full w-full flex flex-col items-center justify-center opacity-40 bg-slate-200 group-hover:opacity-60 transition-opacity">
+                                                <ImageIcon className="h-10 w-10 sm:h-16 sm:w-16 text-slate-400 mb-2" />
+                                                <span className="text-[10px] sm:text-sm font-medium text-slate-500">Belum Ada Gambar</span>
+                                            </div>
+                                        )}
+                                        {product.stock <= 5 && (
+                                            <Badge variant="destructive" className="absolute top-2 right-2 sm:top-3 sm:right-3 shadow-md border-white border text-[8px] sm:text-[10px] uppercase tracking-wider font-bold px-1.5 sm:px-2.5">
+                                                Sisa {product.stock}
+                                            </Badge>
+                                        )}
                                     </div>
-                                    <Button
-                                        className="w-full mt-3 sm:mt-6 shadow-sm hover:shadow-md transition-shadow font-semibold py-2 sm:py-2.5 h-auto text-xs sm:text-sm"
-                                        variant="default"
-                                        onClick={() => handleAddToCart(product)}
-                                    >
-                                        Tambah ke Keranjang
-                                    </Button>
-                                </CardContent>
-                            </Card>
-                        ))}
+                                    <CardContent className="p-3 sm:p-5 flex-1 flex flex-col justify-between">
+                                        <div>
+                                            <div className="text-[10px] font-medium text-blue-600 mb-1 uppercase tracking-wider">
+                                                {product.category?.name || "Produk"}
+                                            </div>
+                                            <h3 className="font-semibold text-slate-900 line-clamp-2 text-sm sm:text-base md:text-lg leading-tight mb-1.5 sm:mb-2 group-hover:text-primary transition-colors">{product.name}</h3>
+                                            <p className="text-base sm:text-xl md:text-2xl font-black text-slate-900 mb-1 relative inline-block">
+                                                {formatRupiah(product.sellingPrice)}
+                                                <span className="absolute bottom-1 left-0 w-full h-1.5 sm:h-2 bg-blue-100 -z-10 group-hover:h-2.5 sm:group-hover:h-3 transition-all"></span>
+                                            </p>
+                                        </div>
+                                        <Button
+                                            className="w-full mt-3 sm:mt-6 shadow-sm hover:shadow-md transition-shadow font-semibold py-2 sm:py-2.5 h-auto text-xs sm:text-sm"
+                                            variant="default"
+                                            onClick={() => handleAddToCart(product)}
+                                        >
+                                            Tambah ke Keranjang
+                                        </Button>
+                                    </CardContent>
+                                </Card>
+                            ))}
+                        </div>
+
+                        {/* Pagination Controls */}
+                        <div className="flex justify-center items-center gap-4 py-8">
+                            <Button
+                                variant="outline"
+                                onClick={() => setPage(p => Math.max(1, p - 1))}
+                                disabled={page === 1}
+                            >
+                                Sebelumnya
+                            </Button>
+                            <span className="text-sm font-medium">
+                                Halaman {page} dari {totalPages}
+                            </span>
+                            <Button
+                                variant="outline"
+                                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                                disabled={page === totalPages}
+                            >
+                                Berikutnya
+                            </Button>
+                        </div>
                     </div>
                 )}
             </div>

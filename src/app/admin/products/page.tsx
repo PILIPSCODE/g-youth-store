@@ -49,6 +49,8 @@ export default function AdminProductsPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [search, setSearch] = useState("");
     const [selectedCategory, setSelectedCategory] = useState("ALL");
+    const [page, setPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     // Modal state
@@ -68,9 +70,17 @@ export default function AdminProductsPage() {
 
     const fetchProducts = async () => {
         try {
-            const res = await fetch("/api/products");
+            const query = new URLSearchParams({
+                page: page.toString(),
+                limit: "10",
+            });
+            if (selectedCategory !== "ALL") query.append("categoryId", selectedCategory);
+            if (search) query.append("search", search);
+
+            const res = await fetch(`/api/products?${query.toString()}`);
             const data = await res.json();
             setProducts(data.data?.products || []);
+            setTotalPages(data.data?.pagination?.totalPages || 1);
         } catch (error) {
             toast.error("Failed to load products");
         }
@@ -93,7 +103,17 @@ export default function AdminProductsPage() {
             setIsLoading(false);
         };
         init();
-    }, []);
+    }, [page, selectedCategory, search]);
+
+    const handleCategoryChange = (val: string) => {
+        setSelectedCategory(val);
+        setPage(1);
+    };
+
+    const handleSearchChange = (val: string) => {
+        setSearch(val);
+        setPage(1);
+    };
 
     const resetForm = () => {
         setFormData({
@@ -178,13 +198,6 @@ export default function AdminProductsPage() {
             setIsSubmitting(false);
         }
     };
-
-    const filteredProducts = products.filter((p) => {
-        const matchesSearch = p.name.toLowerCase().includes(search.toLowerCase()) ||
-            p.sku.toLowerCase().includes(search.toLowerCase());
-        const matchesCategory = selectedCategory === "ALL" || p.categoryId === selectedCategory;
-        return matchesSearch && matchesCategory;
-    });
 
     return (
         <AuthLayout allowedRoles={["ADMIN"]}>
@@ -295,14 +308,14 @@ export default function AdminProductsPage() {
                             placeholder="Cari nama atau SKU..."
                             className="pl-8"
                             value={search}
-                            onChange={(e) => setSearch(e.target.value)}
+                            onChange={(e) => handleSearchChange(e.target.value)}
                         />
                     </div>
                     <div className="w-full sm:w-64">
                         <select
                             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                             value={selectedCategory}
-                            onChange={(e) => setSelectedCategory(e.target.value)}
+                            onChange={(e) => handleCategoryChange(e.target.value)}
                         >
                             <option value="ALL">Semua Kategori</option>
                             {categories.map((c) => (
@@ -318,10 +331,10 @@ export default function AdminProductsPage() {
                 <div className="md:hidden space-y-3">
                     {isLoading ? (
                         <div className="text-center py-12 text-muted-foreground">Memuat produk...</div>
-                    ) : filteredProducts.length === 0 ? (
+                    ) : products.length === 0 ? (
                         <div className="text-center py-12 text-muted-foreground">Produk tidak ditemukan.</div>
                     ) : (
-                        filteredProducts.map((product) => (
+                        products.map((product) => (
                             <div key={product.id} className="bg-white border border-slate-200 rounded-lg p-3 flex gap-3 items-start shadow-sm">
                                 <div className="w-14 h-14 rounded-md bg-slate-100 border border-slate-200 flex-shrink-0 flex items-center justify-center overflow-hidden">
                                     {product.imageUrl ? (
@@ -377,12 +390,12 @@ export default function AdminProductsPage() {
                                 <TableRow>
                                     <TableCell colSpan={6} className="text-center h-24">Memuat produk...</TableCell>
                                 </TableRow>
-                            ) : filteredProducts.length === 0 ? (
+                            ) : products.length === 0 ? (
                                 <TableRow>
                                     <TableCell colSpan={6} className="text-center h-24 text-muted-foreground">Produk tidak ditemukan.</TableCell>
                                 </TableRow>
                             ) : (
-                                filteredProducts.map((product) => (
+                                products.map((product) => (
                                     <TableRow key={product.id}>
                                         <TableCell>
                                             {product.imageUrl ? (
@@ -422,6 +435,27 @@ export default function AdminProductsPage() {
                             )}
                         </TableBody>
                     </Table>
+                </div>
+
+                {/* Pagination Controls */}
+                <div className="flex justify-center items-center gap-4 py-4">
+                    <Button
+                        variant="outline"
+                        onClick={() => setPage(p => Math.max(1, p - 1))}
+                        disabled={page === 1}
+                    >
+                        Sebelumnya
+                    </Button>
+                    <span className="text-sm font-medium">
+                        Halaman {page} dari {totalPages}
+                    </span>
+                    <Button
+                        variant="outline"
+                        onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                        disabled={page === totalPages}
+                    >
+                        Berikutnya
+                    </Button>
                 </div>
             </div>
         </AuthLayout>
